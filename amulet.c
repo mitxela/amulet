@@ -36,7 +36,7 @@ void set_bar_graph(unsigned char v) {
   matrix[1]=b;
 }
 
-unsigned short read_reg(unsigned char reg) {
+float read_reg(unsigned char reg) {
 
   i2c_start(VEML6075_ADDR+I2C_WRITE);
   i2c_write(reg);
@@ -45,7 +45,7 @@ unsigned short read_reg(unsigned char reg) {
   unsigned char msb = i2c_readNak();
   i2c_stop();
 
-  return lsb + (msb<<8);
+  return (float)(lsb + (msb<<8));
 }
 
 int main(void) {
@@ -78,7 +78,36 @@ int main(void) {
   _delay_ms(101);
 
   while (1) {
-    set_bar_graph( (char)(read_reg(0x07) >> 1) );
+    //unsigned short uva = read_reg(0x07);
+    //unsigned short uvb = read_reg(0x09);
+    //unsigned short uvcomp1 = read_reg(0x0A);
+    //unsigned short uvcomp2 = read_reg(0x0B);
+
+    #define c_a 2.22
+    #define c_b 1.33
+    #define c_c 2.95
+    #define c_d 1.74
+    #define c_resp_uva 0.001461
+    #define c_resp_uvb 0.002591
+
+    //float uva_calc = (float)uva - c_a*(float)uvcomp1 - c_b*(float)uvcomp2;
+    //float uvb_calc = (float)uvb - c_c*(float)uvcomp1 - c_d*(float)uvcomp2;
+
+
+    float uva = read_reg(0x07);
+    float uvb = read_reg(0x09);
+    float uvcomp1 = read_reg(0x0A);
+    float uvcomp2 = read_reg(0x0B);
+
+    float uva_calc = uva - c_a*uvcomp1 - c_b*uvcomp2;
+    float uvb_calc = uvb - c_c*uvcomp1 - c_d*uvcomp2;
+
+    if (uva_calc<0.0) uva_calc = 0;
+    if (uvb_calc<0.0) uvb_calc = 0;
+
+    float uvi = ( uva_calc*c_resp_uva + uvb_calc*c_resp_uvb )*0.5;
+
+    set_bar_graph( (char)( uvi*25 ) );
     _delay_ms(100);
   }
 
