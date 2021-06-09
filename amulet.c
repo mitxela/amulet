@@ -11,7 +11,7 @@
 
 // PB6      - button
 
-#define MATLEN 24
+#define MATLEN 6
 
 // 15 seconds
 #define POWEROFF_TIMEOUT 150
@@ -97,6 +97,8 @@ int main(void) {
     if (mode == 0) {
       #define animDelay 30
 
+      for (unsigned char j=MATLEN;j--;) matrix[j]=0x80;
+
       matrix[0]=0b11100001;
       _delay_ms(animDelay);
       matrix[0]=0b11100010;
@@ -105,7 +107,7 @@ int main(void) {
       _delay_ms(animDelay);
       matrix[0]=0b11101000;
       _delay_ms(animDelay);
-      matrix[0]=0;
+      matrix[0]=0x80;
       matrix[1]=0b11010001;
       _delay_ms(animDelay);
       matrix[1]=0b11010010;
@@ -132,7 +134,7 @@ int main(void) {
       _delay_ms(animDelay);
       matrix[1]=0b11010001;
       _delay_ms(animDelay);
-      matrix[1]=0;
+      matrix[1]=0x80;
       matrix[0]=0b11101000;
       _delay_ms(animDelay);
       matrix[0]=0b11100100;
@@ -141,7 +143,7 @@ int main(void) {
       _delay_ms(animDelay);
       matrix[0]=0b11100001;
       _delay_ms(animDelay);
-      matrix[0]=0;
+      matrix[0]=0x80;
 
       mode=1;
     } else _delay_ms(100);
@@ -211,11 +213,11 @@ int main(void) {
     } else {
       matrix[0]=0b11101111;
       matrix[1]=0b11011111;
-      matrix[2]=0;
+      matrix[2]=0x80;
       _delay_ms(200);
 
       PRR |= (1<< PRTIM0); // timer off
-      for (char j=0;j<5;j++) matrix[j]=0;
+      for (int j=0;j<6;j++) matrix[j]=0;
       PORTA =0;
       DDRA = 0;
       DDRB = 0;
