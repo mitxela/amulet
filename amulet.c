@@ -13,7 +13,7 @@
 
 #define MATLEN 24
 
-unsigned char matrix[MATLEN]={0};
+unsigned char volatile matrix[MATLEN]={0};
 unsigned char mode = 0;
 unsigned char button = 0;
 
@@ -87,7 +87,47 @@ int main(void) {
   _delay_ms(10);
 
   while (1) {
-    _delay_ms(100);
+    if (mode == 0) {
+      #define animDelay 40
+
+      matrix[0]=0b11100001;
+      matrix[1]=0;
+      matrix[2]=0;
+      _delay_ms(animDelay);
+      matrix[0]=0b11100010;
+      _delay_ms(animDelay);
+      matrix[0]=0b11100100;
+      _delay_ms(animDelay);
+      matrix[0]=0b11101000;
+      _delay_ms(animDelay);
+      matrix[0]=0;
+      matrix[1]=0b11010001;
+      _delay_ms(animDelay);
+      matrix[1]=0b11010010;
+      _delay_ms(animDelay);
+      matrix[1]=0b11010100;
+      _delay_ms(animDelay);
+      matrix[1]=0b11011000;
+      _delay_ms(animDelay);
+      matrix[1]=0b11010100;
+      _delay_ms(animDelay);
+      matrix[1]=0b11010010;
+      _delay_ms(animDelay);
+      matrix[1]=0b11010001;
+      _delay_ms(animDelay);
+      matrix[1]=0;
+      matrix[0]=0b11101000;
+      _delay_ms(animDelay);
+      matrix[0]=0b11100100;
+      _delay_ms(animDelay);
+      matrix[0]=0b11100010;
+      _delay_ms(animDelay);
+      matrix[0]=0b11100001;
+      _delay_ms(animDelay);
+      matrix[0]=0;
+
+      mode=1;
+    } else _delay_ms(100);
 
     float uva, uvb, uvcomp1, uvcomp2, uva_calc=0, uvb_calc=0;
 
@@ -126,28 +166,27 @@ int main(void) {
     if (uvb_calc<0.0) uvb_calc = 0;
 
 
-    if (mode == 0) {
+    if (mode == 1) {
       matrix[2]=0b10110010;
 
       float uvi = ( uva_calc*c_resp_uva + uvb_calc*c_resp_uvb )*0.5*UVI_256;
       if (uvi >254.0) uvi=254.0;
       set_bar_graph( (char)( uvi ) );
 
-
-    } else if (mode == 1) {
+    } else if (mode == 2) {
       matrix[2]=0b10110100;
 
       set_bar_graph( (char)( uva_calc * c_resp_uva * UVI_256 ) );
 
-    } else if (mode == 2) {
+    } else if (mode == 3) {
       matrix[2]=0b10111000;
 
       set_bar_graph( (char)( uvb_calc * c_resp_uvb * UVI_256 ) );
 
     } else {
-      matrix[0]=0b11101100;
-      matrix[1]=0b11011100;
-      matrix[2]=0;
+//      matrix[0]=0b11101100;
+//      matrix[1]=0b11011100;
+//      matrix[2]=0;
 
       // MCUCR 0 default for low-level triggered
       GIMSK |= (1<<INT0);
