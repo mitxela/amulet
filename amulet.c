@@ -34,17 +34,30 @@ ISR(INT0_vect) {
 
 void set_bar_graph(unsigned char v) {
   unsigned char a = 0b11100000, b = 0b11010000;
-  if (v>=16) a|=1;
-  if (v>=48) a|=2;
-  if (v>=80) a|=4;
-  if (v>=112) a|=8;
+  if (v>=16+8) a|=1;
+  if (v>=48+8) a|=2;
+  if (v>=80+8) a|=4;
+  if (v>=112+8) a|=8;
 
-  if (v>=144) b|=1;
-  if (v>=176) b|=2;
-  if (v>=208) b|=4;
-  if (v>=240) b|=8;
+  if (v>=144+8) b|=1;
+  if (v>=176+8) b|=2;
+  if (v>=208+8) b|=4;
+  if (v>=240+8) b|=8;
   matrix[0]=a;
   matrix[1]=b;
+
+  a = 0b11100000; b = 0b11010000;
+  if (v>=16-8) a|=1;
+  if (v>=48-8) a|=2;
+  if (v>=80-8) a|=4;
+  if (v>=112-8) a|=8;
+
+  if (v>=144-8) b|=1;
+  if (v>=176-8) b|=2;
+  if (v>=208-8) b|=4;
+  if (v>=240-8) b|=8;
+  matrix[3]=a;
+  matrix[4]=b;
 }
 
 float read_reg(unsigned char reg) {
@@ -61,10 +74,13 @@ float read_reg(unsigned char reg) {
 
 int main(void) {
 
+  PRR = 0b00001011;
+  ACSRA = 1<<ACD; // Analog comparator disable
+  ADCSRA &= ~(1<<ADEN);
   DDRA = 0xFF;
   PORTA = 0xF0;
   DDRB = 0;
-  PORTB = 1<<6;
+  //PORTB = 1<<6;
 
   TCCR0B = 2; // prescaler /8 - overflow 3906Hz
   TIMSK = (1<<TOIE0);
@@ -88,11 +104,9 @@ int main(void) {
 
   while (1) {
     if (mode == 0) {
-      #define animDelay 40
+      #define animDelay 30
 
       matrix[0]=0b11100001;
-      matrix[1]=0;
-      matrix[2]=0;
       _delay_ms(animDelay);
       matrix[0]=0b11100010;
       _delay_ms(animDelay);
@@ -108,7 +122,7 @@ int main(void) {
       matrix[1]=0b11010100;
       _delay_ms(animDelay);
       matrix[1]=0b11011000;
-      _delay_ms(animDelay);
+      _delay_ms(animDelay*4);
       matrix[1]=0b11010100;
       _delay_ms(animDelay);
       matrix[1]=0b11010010;
@@ -168,30 +182,43 @@ int main(void) {
 
     if (mode == 1) {
       matrix[2]=0b10110010;
-
       float uvi = ( uva_calc*c_resp_uva + uvb_calc*c_resp_uvb )*0.5*UVI_256;
       if (uvi >254.0) uvi=254.0;
-      set_bar_graph( (char)( uvi ) );
+      set_bar_graph( (unsigned char)( uvi ) );
 
     } else if (mode == 2) {
       matrix[2]=0b10110100;
-
-      set_bar_graph( (char)( uva_calc * c_resp_uva * UVI_256 ) );
+      float out = uva_calc * c_resp_uva * UVI_256;
+      if (out>254.0) out=254.0;
+      set_bar_graph( (unsigned char)( out ) );
 
     } else if (mode == 3) {
       matrix[2]=0b10111000;
-
-      set_bar_graph( (char)( uvb_calc * c_resp_uvb * UVI_256 ) );
+      float out = uvb_calc * c_resp_uvb * UVI_256;
+      if (out>254.0) out=254.0;
+      set_bar_graph( (unsigned char)( out ) );
 
     } else {
-//      matrix[0]=0b11101100;
-//      matrix[1]=0b11011100;
-//      matrix[2]=0;
+      matrix[0]=0b11101111;
+      matrix[1]=0b11011111;
+      matrix[2]=0;
+      _delay_ms(200);
+
+      PRR |= (1<< PRTIM0); // timer off
+      for (char j=0;j<5;j++) matrix[j]=0;
+      PORTA =0;
+      DDRA = 0;
+      DDRB = 0;
+      PORTB = 0;
 
       // MCUCR 0 default for low-level triggered
       GIMSK |= (1<<INT0);
       MCUCR |= (1<<SE) | (1<<SM1);
       asm("sleep");
+
+      i2c_init();
+      DDRA = 0xFF;
+      PRR &= ~(1<< PRTIM0);
     }
 
   }
