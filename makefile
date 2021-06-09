@@ -1,7 +1,7 @@
 .PHONY: clean flash disasm fuses
 
 file = amulet
-device = attiny861
+device = attiny84
 F_CPU=8000000UL
 
 
@@ -11,11 +11,11 @@ F_CPU=8000000UL
 %.o : %.S
 	avr-gcc -c -DF_CPU=$(F_CPU) -mmcu=$(device) -x assembler-with-cpp $< -o $(@F)
 
+$(file).hex: $(file).elf
+	avr-objcopy -j .text -j .data -O ihex $(file).elf $(file).hex
+
 $(file).elf: $(file).o i2cmaster.o
 	avr-gcc -mmcu=$(device) $^ -o $(@F)
-
-$(file).hex: makefile $(file).elf
-	avr-objcopy -j .text -j .data -O ihex $(file).elf $(file).hex
 
 clean:
 	rm -f $(file).hex $(file).elf *.o

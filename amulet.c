@@ -8,8 +8,9 @@
 // PA0: PA3 - Anodes
 // PA4, PA5 - bar graph cathodes
 // PA6      - mode indicator cathode
+// PA7      - power to sensor
 
-// PB6      - button
+// PB2      - button
 
 #define MATLEN 6
 
@@ -21,16 +22,14 @@ unsigned char mode = 0;
 unsigned char button = 0;
 unsigned char timeout = 0;
 
-// TIM0_OVF for attiny84
-ISR(TIMER0_OVF_vect) {
+ISR(TIM0_OVF_vect) {
   static unsigned char idx = 0;
 
   PORTA = matrix[idx];
   if (++idx == MATLEN) idx = 0;
 }
 
-// EXT_INT0 on attiny84
-ISR(INT0_vect) {
+ISR(EXT_INT0_vect) {
   GIMSK &= ~(1<<INT0);
   mode = 0;
   button = 255;
@@ -80,7 +79,7 @@ float read_reg(unsigned char reg) {
 int main(void) {
 
   PRR = 0b00001011;
-  ACSRA = 1<<ACD; // Analog comparator disable
+  ACSR = 1<<ACD; // Analog comparator disable
   ADCSRA &= ~(1<<ADEN);
   DDRA = 0xFF;
   PORTA = 0xF0;
@@ -88,7 +87,7 @@ int main(void) {
   //PORTB = 1<<6;
 
   TCCR0B = 2; // prescaler /8 - overflow 3906Hz
-  TIMSK = (1<<TOIE0);
+  TIMSK0 = (1<<TOIE0);
 
   sei();
 
@@ -159,8 +158,7 @@ int main(void) {
 
     #define UVI_256 23.3
 
-
-    while ((PINB & (1<<6)) ==0) { //button held
+    while ((PINB & (1<<2)) ==0) { //button held
       // freeze display
       _delay_ms(10);
       timeout = 0;
@@ -193,19 +191,19 @@ int main(void) {
 
 
     if (mode == 1) {
-      matrix[2]=0b10110010;
+      matrix[2]=0b10110001;
       float uvi = ( uva_calc*c_resp_uva + uvb_calc*c_resp_uvb )*0.5*UVI_256;
       if (uvi >254.0) uvi=254.0;
       set_bar_graph( (unsigned char)( uvi ) );
 
     } else if (mode == 2) {
-      matrix[2]=0b10110100;
+      matrix[2]=0b10110010;
       float out = uva_calc * c_resp_uva * UVI_256;
       if (out>254.0) out=254.0;
       set_bar_graph( (unsigned char)( out ) );
 
     } else if (mode == 3) {
-      matrix[2]=0b10111000;
+      matrix[2]=0b10110100;
       float out = uvb_calc * c_resp_uvb * UVI_256;
       if (out>254.0) out=254.0;
       set_bar_graph( (unsigned char)( out ) );
