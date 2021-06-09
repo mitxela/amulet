@@ -13,9 +13,13 @@
 
 #define MATLEN 24
 
+// 15 seconds
+#define POWEROFF_TIMEOUT 150
+
 unsigned char volatile matrix[MATLEN]={0};
 unsigned char mode = 0;
 unsigned char button = 0;
+unsigned char timeout = 0;
 
 // TIM0_OVF for attiny84
 ISR(TIMER0_OVF_vect) {
@@ -30,6 +34,7 @@ ISR(INT0_vect) {
   GIMSK &= ~(1<<INT0);
   mode = 0;
   button = 255;
+  timeout=0;
 }
 
 void set_bar_graph(unsigned char v) {
@@ -88,20 +93,6 @@ int main(void) {
   sei();
 
 
-
-  i2c_init();
-
-  if ( i2c_start(VEML6075_ADDR+I2C_WRITE) ) {
-    i2c_stop();
-    matrix[0]=0b11101010;
-    matrix[1]=0b11011010;
-    while (1);
-  }
-  i2c_write(0);
-  i2c_write(0x10); // power on, int time 100ms
-  i2c_stop();
-  _delay_ms(10);
-
   while (1) {
     if (mode == 0) {
       #define animDelay 30
@@ -122,7 +113,19 @@ int main(void) {
       matrix[1]=0b11010100;
       _delay_ms(animDelay);
       matrix[1]=0b11011000;
-      _delay_ms(animDelay*4);
+      _delay_ms(animDelay*2);
+
+      i2c_init();
+      if ( i2c_start(VEML6075_ADDR+I2C_WRITE) ) {
+        i2c_stop();
+        matrix[0]=0b11101010;
+        matrix[1]=0b11011010;
+        while (1);
+      }
+      i2c_write(0);
+      i2c_write(0x10); // power on, int time 100ms
+      i2c_stop();
+
       matrix[1]=0b11010100;
       _delay_ms(animDelay);
       matrix[1]=0b11010010;
@@ -158,6 +161,7 @@ int main(void) {
     while ((PINB & (1<<6)) ==0) { //button held
       // freeze display
       _delay_ms(10);
+      timeout = 0;
       button++; if (button==0) button--;
     }
     if (button >0) { // button just released
@@ -166,6 +170,12 @@ int main(void) {
         if (mode>3) mode=0;
       }
       button =0;
+    }
+
+    timeout++;
+    if (timeout >= POWEROFF_TIMEOUT) {
+      mode = 0;
+      timeout=254;
     }
 
     uva = read_reg(0x07);
@@ -216,7 +226,7 @@ int main(void) {
       MCUCR |= (1<<SE) | (1<<SM1);
       asm("sleep");
 
-      i2c_init();
+      timeout=0;
       DDRA = 0xFF;
       PRR &= ~(1<< PRTIM0);
     }
