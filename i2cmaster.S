@@ -59,6 +59,25 @@
 #define __tmp_reg__ 0
 #endif
 
+.macro force_sda_low
+	cbi	SDA_OUT,SDA
+	sbi	SDA_DDR,SDA
+.endm
+
+.macro force_scl_low
+	cbi	SCL_OUT,SCL
+	sbi	SCL_DDR,SCL
+.endm
+
+.macro release_sda
+	cbi	SDA_DDR,SDA
+	sbi	SDA_OUT,SDA
+.endm
+
+.macro release_scl
+	cbi	SCL_DDR,SCL
+	sbi	SCL_OUT,SCL
+.endm
 
 	.section .text
 
@@ -124,10 +143,8 @@ i2c_delay_T2:        ; 3 cycles
 	.global i2c_init
 	.func i2c_init
 i2c_init:
-	cbi SDA_DDR,SDA		;release SDA
-	cbi SCL_DDR,SCL		;release SCL
-	cbi SDA_OUT,SDA
-	cbi SCL_OUT,SCL
+	release_sda
+	release_scl
 	ret
 	.endfunc
 
@@ -143,7 +160,7 @@ i2c_init:
 	.global i2c_start
 	.func   i2c_start
 i2c_start:
-	sbi 	SDA_DDR,SDA	;force SDA low
+	force_sda_low
 	rcall 	i2c_delay_T2	;delay T/2
 	
 	rcall 	i2c_write	;write address
@@ -162,13 +179,13 @@ i2c_start:
 	.global i2c_rep_start
 	.func	i2c_rep_start
 i2c_rep_start:
-	sbi	SCL_DDR,SCL	;force SCL low
+	force_scl_low
 	rcall 	i2c_delay_T2	;delay  T/2
-	cbi	SDA_DDR,SDA	;release SDA
+	release_sda
 	rcall	i2c_delay_T2	;delay T/2
-	cbi	SCL_DDR,SCL	;release SCL
+	release_scl
 	rcall 	i2c_delay_T2	;delay  T/2
-	sbi 	SDA_DDR,SDA	;force SDA low
+	force_sda_low
 	rcall 	i2c_delay_T2	;delay	T/2
 	
 	rcall	i2c_write	;write address
@@ -189,7 +206,7 @@ i2c_rep_start:
 i2c_start_wait:
 	mov	__tmp_reg__,r24
 i2c_start_wait1:
-	sbi 	SDA_DDR,SDA	;force SDA low
+	force_sda_low 
 	rcall 	i2c_delay_T2	;delay T/2
 	mov	r24,__tmp_reg__
 	rcall 	i2c_write	;write address
@@ -211,12 +228,12 @@ i2c_start_wait_done:
 	.global	i2c_stop
 	.func	i2c_stop
 i2c_stop:
-	sbi	SCL_DDR,SCL	;force SCL low
-	sbi	SDA_DDR,SDA	;force SDA low
+	force_scl_low
+	force_sda_low 
 	rcall	i2c_delay_T2	;delay T/2
-	cbi	SCL_DDR,SCL	;release SCL
+	release_scl
 	rcall	i2c_delay_T2	;delay T/2
-	cbi	SDA_DDR,SDA	;release SDA
+	release_sda
 	rcall	i2c_delay_T2	;delay T/2
 	ret
 	.endfunc
@@ -239,25 +256,25 @@ i2c_write_bit:
 	lsl	r24		;if transmit register empty
 i2c_write_first:
 	breq	i2c_get_ack
-	sbi	SCL_DDR,SCL	;force SCL low
+	force_scl_low
 	brcc	i2c_write_low
 	nop
-	cbi	SDA_DDR,SDA	;release SDA
+	release_sda
 	rjmp	i2c_write_high
 i2c_write_low:
-	sbi	SDA_DDR,SDA	;force SDA low
+	force_sda_low
 	rjmp	i2c_write_high
 i2c_write_high:
 	rcall 	i2c_delay_T2	;delay T/2
-	cbi	SCL_DDR,SCL	;release SCL
+	release_scl
 	rcall	i2c_delay_T2	;delay T/2
 	rjmp	i2c_write_bit
 	
 i2c_get_ack:
-	sbi	SCL_DDR,SCL	;force SCL low
-	cbi	SDA_DDR,SDA	;release SDA
+	force_scl_low
+	release_sda
 	rcall	i2c_delay_T2	;delay T/2
-	cbi	SCL_DDR,SCL	;release SCL
+	release_scl
 i2c_ack_wait:
 	sbis	SCL_IN,SCL	;wait SCL high (in case wait states are inserted)
 	rjmp	i2c_ack_wait
@@ -295,17 +312,17 @@ i2c_readAck:
 i2c_read:
 	ldi	r23,0x01	;data = 0x01
 i2c_read_bit:
-	sbi	SCL_DDR,SCL	;force SCL low
-	cbi	SDA_DDR,SDA	;release SDA (from previous ACK)
+	force_scl_low
+	release_sda
 	rcall	i2c_delay_T2	;delay T/2
 	
-	cbi	SCL_DDR,SCL	;release SCL
+	release_scl
 	rcall	i2c_delay_T2	;delay T/2
 	
 i2c_read_stretch:
-    sbis SCL_IN, SCL        ;loop until SCL is high (allow slave to stretch SCL)
-    rjmp	i2c_read_stretch
-    	
+	sbis SCL_IN, SCL	;loop until SCL is high (allow slave to stretch SCL)
+	rjmp	i2c_read_stretch
+	
 	clc			;clear carry flag
 	sbic	SDA_IN,SDA	;if SDA is high
 	sec			;  set carry flag
@@ -314,16 +331,16 @@ i2c_read_stretch:
 	brcc	i2c_read_bit	;while receive register not full
 	
 i2c_put_ack:
-	sbi	SCL_DDR,SCL	;force SCL low	
+	force_scl_low
 	cpi	r24,1
 	breq	i2c_put_ack_low	;if (ack=0)
-	cbi	SDA_DDR,SDA	;      release SDA
+	release_sda
 	rjmp	i2c_put_ack_high
 i2c_put_ack_low:                ;else
-	sbi	SDA_DDR,SDA	;      force SDA low
+	force_sda_low
 i2c_put_ack_high:
 	rcall	i2c_delay_T2	;delay T/2
-	cbi	SCL_DDR,SCL	;release SCL
+	release_scl
 i2c_put_ack_wait:
 	sbis	SCL_IN,SCL	;wait SCL high
 	rjmp	i2c_put_ack_wait
