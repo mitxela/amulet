@@ -579,4 +579,128 @@ F 3 "" H 5450 5450 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	5450 5450 5450 5350
+$Comp
+L Connector:TestPoint TP6
+U 1 1 60DA43B2
+P 2950 4900
+F 0 "TP6" H 3000 4850 50  0000 R CNN
+F 1 "VDD" V 2950 5100 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D1.0mm" H 3150 4900 50  0001 C CNN
+F 3 "~" H 3150 4900 50  0001 C CNN
+	1    2950 4900
+	-1   0    0    1   
+$EndComp
+$Comp
+L Connector:TestPoint TP7
+U 1 1 60DA6958
+P 3100 4900
+F 0 "TP7" H 3150 4850 50  0000 R CNN
+F 1 "SCK" V 3100 5100 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D1.0mm" H 3300 4900 50  0001 C CNN
+F 3 "~" H 3300 4900 50  0001 C CNN
+	1    3100 4900
+	-1   0    0    1   
+$EndComp
+$Comp
+L Connector:TestPoint TP8
+U 1 1 60DA6F5D
+P 3250 4900
+F 0 "TP8" H 3300 4850 50  0000 R CNN
+F 1 "MISO" V 3250 5100 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D1.0mm" H 3450 4900 50  0001 C CNN
+F 3 "~" H 3450 4900 50  0001 C CNN
+	1    3250 4900
+	-1   0    0    1   
+$EndComp
+$Comp
+L Connector:TestPoint TP9
+U 1 1 60DA71A9
+P 3400 4900
+F 0 "TP9" H 3450 4850 50  0000 R CNN
+F 1 "MOSI" V 3400 5100 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D1.0mm" H 3600 4900 50  0001 C CNN
+F 3 "~" H 3600 4900 50  0001 C CNN
+	1    3400 4900
+	-1   0    0    1   
+$EndComp
+$Comp
+L Connector:TestPoint TP4
+U 1 1 60DA72CA
+P 2650 4900
+F 0 "TP4" H 2700 4850 50  0000 R CNN
+F 1 "RST" V 2650 5100 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D1.0mm" H 2850 4900 50  0001 C CNN
+F 3 "~" H 2850 4900 50  0001 C CNN
+	1    2650 4900
+	-1   0    0    1   
+$EndComp
+$Comp
+L Connector:TestPoint TP5
+U 1 1 60DA7664
+P 2800 4900
+F 0 "TP5" H 2850 4850 50  0000 R CNN
+F 1 "GND" V 2800 5100 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D1.0mm" H 3000 4900 50  0001 C CNN
+F 3 "~" H 3000 4900 50  0001 C CNN
+	1    2800 4900
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	2650 4900 2650 4400
+Wire Wire Line
+	2650 4400 3500 4400
+Wire Wire Line
+	3500 4400 3500 3650
+Wire Wire Line
+	3500 3650 3350 3650
+$Comp
+L power:GND #PWR0104
+U 1 1 60DB1062
+P 2800 4700
+F 0 "#PWR0104" H 2800 4450 50  0001 C CNN
+F 1 "GND" H 2805 4527 50  0000 C CNN
+F 2 "" H 2800 4700 50  0001 C CNN
+F 3 "" H 2800 4700 50  0001 C CNN
+	1    2800 4700
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	2800 4700 2800 4900
+$Comp
+L power:VDD #PWR0105
+U 1 1 60DB38E6
+P 2950 4700
+F 0 "#PWR0105" H 2950 4550 50  0001 C CNN
+F 1 "VDD" H 2965 4873 50  0000 C CNN
+F 2 "" H 2950 4700 50  0001 C CNN
+F 3 "" H 2950 4700 50  0001 C CNN
+	1    2950 4700
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2950 4700 2950 4900
+Text Label 3700 2850 2    50   ~ 0
+PA4
+Text Label 3700 2950 2    50   ~ 0
+PA5
+Text Label 3700 3050 2    50   ~ 0
+PA6
+Text Label 3050 4650 0    50   ~ 0
+PA4
+Wire Wire Line
+	3050 4650 3100 4650
+Wire Wire Line
+	3100 4650 3100 4900
+Text Label 3200 4700 0    50   ~ 0
+PA5
+Wire Wire Line
+	3200 4700 3250 4700
+Wire Wire Line
+	3250 4700 3250 4900
+Text Label 3350 4750 0    50   ~ 0
+PA6
+Wire Wire Line
+	3350 4750 3400 4750
+Wire Wire Line
+	3400 4750 3400 4900
 $EndSCHEMATC
