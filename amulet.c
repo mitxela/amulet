@@ -124,7 +124,7 @@ int main(void) {
         while (1);
       }
       i2c_write(0);
-      i2c_write(0x10); // power on, int time 100ms
+      i2c_write(0x18); // power on, int time 100ms, HD
       i2c_stop();
 
       matrix[1]=0b11010100;
@@ -147,7 +147,7 @@ int main(void) {
       mode=1;
     } else _delay_ms(100);
 
-    float uva, uvb, uvcomp1, uvcomp2, uva_calc=0, uvb_calc=0;
+    float uva, uvb, uvcomp1, uvcomp2, dummy, uva_calc=0, uvb_calc=0;
 
     #define c_a 2.22
     #define c_b 1.33
@@ -182,6 +182,9 @@ int main(void) {
     uvb = read_reg(0x09);
     uvcomp1 = read_reg(0x0A);
     uvcomp2 = read_reg(0x0B);
+    dummy = read_reg(0x08);
+    uvcomp1 -= dummy;
+    uvcomp2 -= dummy;
 
     uva_calc = uva - c_a*uvcomp1 - c_b*uvcomp2;
     uvb_calc = uvb - c_c*uvcomp1 - c_d*uvcomp2;
@@ -198,13 +201,13 @@ int main(void) {
 
     } else if (mode == 2) {
       matrix[2]=0b10110010;
-      float out = uva_calc * c_resp_uva * UVI_256;
+      float out = uva_calc * c_resp_uva * UVI_256 * 4.0;
       if (out>254.0) out=254.0;
       set_bar_graph( (unsigned char)( out ) );
 
     } else if (mode == 3) {
       matrix[2]=0b10110100;
-      float out = uvb_calc * c_resp_uvb * UVI_256;
+      float out = uvb_calc * c_resp_uvb * UVI_256 * 4.0;
       if (out>254.0) out=254.0;
       set_bar_graph( (unsigned char)( out ) );
 
